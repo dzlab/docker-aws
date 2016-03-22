@@ -136,6 +136,7 @@ case $1 in
     ;;
   *)
     echo "Unknown command $1"
+    echo "Usage: swarminate.sh [mk | up | down | rm]"
     exit 1
     ;;
 esac
