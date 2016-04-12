@@ -47,7 +47,7 @@ run_linked_containers () {
 
   # start "app" containers
   echo "2. Starting 'app' containers"
-  for i in {0..1}; do
+  for i in {1..2}; do
     PORT=800${i}
 
     docker run -d -e SRV_NAME=s${i} -p ${PORT}:5000 --link redis:redis --name ${APP_CONTAINER}_${i} ${DOCKER_HUB_USER}/demoapp
@@ -58,7 +58,7 @@ run_linked_containers () {
 
   # start "haproxy" container
   echo "3. Starting 'haproxy' container"
-  docker run -d -P --link app_0 --name ${HAPROXY_CONTAINER} ${DOCKER_HUB_USER}/haproxy 
+  docker run -d -P --link app_1 --name ${HAPROXY_CONTAINER} ${DOCKER_HUB_USER}/haproxy 
 }
 
 # run all containers using an overlay network
@@ -72,7 +72,7 @@ run_overlay_containers() {
   docker run -d -p 6379:6379 --name ${REDIS_CONTAINER} --net ${NETWORK} redis
 
   echo "3. Starting 'app' containers"
-  for i in {0..1}; do
+  for i in {1..2}; do
     PORT=800${i}
 
     docker run -d -e SRV_NAME=s${i} -p ${PORT}:5000 --net ${NETWORK} --name ${APP_CONTAINER}_${i} ${DOCKER_HUB_USER}/demoapp
@@ -89,8 +89,8 @@ run_overlay_containers() {
 # Destroy everything
 teardown() {
   # may stop them first
-  docker rm -f ${APP_CONTAINER}_0
   docker rm -f ${APP_CONTAINER}_1
+  docker rm -f ${APP_CONTAINER}_2
   docker rm -f ${HAPROXY_CONTAINER}
   docker rm -f ${REDIS_CONTAINER}
   docker network rm ${NETWORK}
@@ -118,9 +118,9 @@ case $1 in
     teardown || true
     ;;  
   curl)
-    # check health of apps
-    curlthis 'app_0:5000/health/check'
+    # check health of app
     curlthis 'app_1:5000/health/check'
+    curlthis 'app_2:5000/health/check'
     ;;
   *)
     echo "Usage: demo1.sh [build | run | curl]"
