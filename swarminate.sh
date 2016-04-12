@@ -18,7 +18,7 @@ group_name="docker-networking"
 group_id=$(aws ec2 describe-security-groups --filters Name=group-name,Values=${group_name} | jq '.["SecurityGroups"][0].GroupId' | sed -e 's/^"//'  -e 's/"$//')
 
 #my_ip="$(wget -q -O- http://icanhazip.com)"
-my_ip=$(curl http://icanhazip.com)
+my_ip=$(curl -s http://icanhazip.com)
 
 # For details https://docs.docker.com/machine/drivers/aws/
 # Get the AMI for your region from this list: https://wiki.debian.org/Cloud/AmazonEC2Image/Jessie, or https://cloud-images.ubuntu.com/locator/ec2/
@@ -68,7 +68,7 @@ create() {
     --engine-opt "cluster-advertise eth0:2376" \
     --swarm --swarm-master \
     --swarm-discovery=consul://${kvip}:8500 \
-    swarm-master 
+    swarm-master
     # For a default bridged networking  --swarm-discovery=token://$CLUSTER_ID \
   echo "04 - Creating swarm nodes on AWS"
   for i in 0 1 2 3; do
@@ -78,9 +78,10 @@ create() {
       --engine-opt "cluster-advertise eth0:2376" \
       --swarm \
       --swarm-discovery=consul://${kvip}:8500 \
-      swarm-agent-$i
+      swarm-agent-$i &
      # For a default bridged networking --swarm-discovery=token://$CLUSTER_ID \
   done
+  wait   
   echo "04 - Set the DOCKER_HOST env variable"
   eval $(docker-machine env --swarm swarm-master)
 }
