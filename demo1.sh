@@ -50,7 +50,7 @@ run_linked_containers () {
   for i in {0..1}; do
     PORT=800${i}
 
-    docker run -d -e SRV_NAME=s${i} -p ${PORT}:5000 --link redis:redis --name "app"_${i} ${DOCKER_HUB_USER}/demoapp
+    docker run -d -e SRV_NAME=s${i} -p ${PORT}:5000 --link redis:redis --name ${APP_CONTAINER}_${i} ${DOCKER_HUB_USER}/demoapp
 
     # give app a second to come back up
     sleep 1
@@ -89,7 +89,8 @@ run_overlay_containers() {
 # Destroy everything
 teardown() {
   # may stop them first
-  docker rm -f ${APP_CONTAINER}
+  docker rm -f ${APP_CONTAINER}_0
+  docker rm -f ${APP_CONTAINER}_1
   docker rm -f ${HAPROXY_CONTAINER}
   docker rm -f ${REDIS_CONTAINER}
   docker network rm ${NETWORK}
