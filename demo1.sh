@@ -58,7 +58,7 @@ run_linked_containers () {
 
   # start "haproxy" container
   echo "3. Starting 'haproxy' container"
-  docker run -d -P --link app_1 --name ${HAPROXY_CONTAINER} ${DOCKER_HUB_USER}/haproxy 
+  docker run -d -P --link ${APP_CONTAINER}_1 --name ${HAPROXY_CONTAINER} ${DOCKER_HUB_USER}/haproxy 
 }
 
 # run all containers using an overlay network
