@@ -1,0 +1,10 @@
+# consulip need to be a known host (e.g. decalared in /etc/hosts with --add-host)
+consul = "consulip:8500"
+
+log_level = "warn"
+
+template {
+  source = "/etc/haproxy/haproxy.ctmpl"
+  destination = "/etc/haproxy/haproxy.cfg"
+  command = "haproxy -f /etc/haproxy/haproxy.cfg -sf $(pidof haproxy) &"
+}
