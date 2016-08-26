@@ -1,0 +1,36 @@
+version: '2'
+
+services:
+
+  proxy:
+    build: ./haproxy
+    container_name: haproxy
+    networks:
+      - front
+    depends_on:
+      - app
+
+  app:
+    build: ./demoapp/
+    container_name: demoapp_1
+    ports:
+      - "8000:5000"
+    networks:
+      - back
+      - front
+    depends_on:
+      - db
+
+  db:
+    image: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - back
+
+networks:
+  front:
+    driver: overlay
+  back:
+    driver: overlay
