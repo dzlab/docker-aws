@@ -42,10 +42,21 @@ createSecurityGroup() {
   # Permit Control plane (Serf ports for discovery)
 	aws ec2 authorize-security-group-ingress --group-id ${group_id} --protocol tcp --port 7946 --cidr 0.0.0.0/0
 	aws ec2 authorize-security-group-ingress --group-id ${group_id} --protocol udp --port 7946 --cidr 0.0.0.0/0
-	# Permit Consul HTTP API
-	aws ec2 authorize-security-group-ingress --group-id ${group_id} --protocol tcp --port 8500 --cidr 0.0.0.0/0
   # Permit Data plane (VXLAN)
 	aws ec2 authorize-security-group-ingress --group-id ${group_id} --protocol udp --port 4789 --cidr 0.0.0.0/0
+  # Permit Consul HTTP API for client Access (UI)
+	aws ec2 authorize-security-group-ingress --group-id ${group_id} --protocol tcp --port 8500 --cidr 0.0.0.0/0
+  # Permit Consul PRC API for client Access 
+	aws ec2 authorize-security-group-ingress --group-id ${group_id} --protocol tcp --port 8400 --cidr 0.0.0.0/0
+  # Permit Consul DNS API for client Access 
+  aws ec2 authorize-security-group-ingress --group-id ${group_id} --protocol tcp --port 53 --cidr 0.0.0.0/0
+	aws ec2 authorize-security-group-ingress --group-id ${group_id} --protocol udp --port 53 --cidr 0.0.0.0/0
+  # Permit Consul Access for Cluster Mgmt
+	aws ec2 authorize-security-group-ingress --group-id ${group_id} --protocol tcp --port 8300 --cidr 0.0.0.0/0
+  # Permit Consul LAN Access for Cluster Mgmt
+	aws ec2 authorize-security-group-ingress --group-id ${group_id} --protocol tcp --port 8301 --cidr 0.0.0.0/0
+  # Permit Consul WAN Access for Cluster Mgmt
+	aws ec2 authorize-security-group-ingress --group-id ${group_id} --protocol tcp --port 8302 --cidr 0.0.0.0/0
 }
 
 create() {
@@ -55,11 +66,26 @@ create() {
   echo "02 - Setting up kv store"
   docker-machine create -d amazonec2 \
     --amazonec2-security-group ${group_name} \
-    kvstore && \
-  docker $(docker-machine config kvstore) run -d --net=host progrium/consul --server -bootstrap-expect 1
+    kvstore 
 
   # store the IP address of the kvstore machine
   kvip=$(docker-machine ip kvstore)
+
+  docker $(docker-machine config kvstore) run -d \
+    --net=host \
+    -p 8300:8300 \
+    -p 8301:8301 \
+    -p 8301:8301/udp \
+    -p 8302:8302 \
+    -p 8302:8302/udp \
+    -p 8400:8400 \
+    -p 8500:8500 \
+    -p 53:53 \
+    -p 53:53/udp \
+    progrium/consul \
+      -server \
+      -advertise ${kvip} \
+      -bootstrap-expect 1
 
   echo "03 - Creating SWARM master"
   docker-machine create --driver amazonec2 \
